@@ -1,0 +1,16 @@
+supplier_id,supplier_name,cnpj,sector,risk_environmental,risk_labor,risk_financial,otif,last_audit_date,document_status
+SUP001,Atlântico Mineração S.A.,12.345.678/0001-90,Mineração,82,76,74,79,2025-11-12,VENCIDO
+SUP002,Verde Norte Agroindustrial Ltda,23.456.789/0001-11,Agronegócio,68,59,65,88,2026-01-24,A VENCER
+SUP003,LogVias Transporte Integrado,34.567.890/0001-22,Logística,55,48,58,91,2025-12-05,OK
+SUP004,TecFabril Componentes Industriais,45.678.901/0001-33,Manufatura,74,69,71,83,2025-10-28,VENCIDO
+SUP005,Novo Horizonte Química Fina,56.789.012/0001-44,Químico,88,81,79,77,2025-09-16,VENCIDO
+SUP006,Ponte Sul Construções e Obras,67.890.123/0001-55,Construção,63,72,66,84,2025-11-30,A VENCER
+SUP007,Energia Vale Renováveis,78.901.234/0001-66,Energia,41,46,52,94,2026-02-14,OK
+SUP008,PrimeMed Equipamentos Hospitalares,89.012.345/0001-77,Saúde,52,44,49,93,2025-12-18,OK
+SUP009,Metal Forte Autopeças,90.123.456/0001-88,Automotivo,70,64,73,82,2025-10-07,A VENCER
+SUP010,GlobalPack Embalagens Sustentáveis,10.234.567/0001-99,Papel e Embalagem,47,53,45,90,2026-01-08,OK
+SUP011,Costa Azul Alimentos Processados,11.345.678/0001-00,Alimentos,60,57,62,86,2025-11-19,A VENCER
+SUP012,UrbanGrid Tecnologia Urbana,22.456.789/0001-10,Tecnologia,36,42,40,96,2026-03-03,OK
+SUP013,Serra Branca Têxtil,33.567.890/0001-20,Têxtil,79,83,75,78,2025-09-29,VENCIDO
+SUP014,ViaPort Serviços Portuários,44.678.901/0001-30,Infraestrutura,72,67,70,81,2025-10-21,A VENCER
+SUP015,Orion Data Services Brasil,55.789.012/0001-40,Serviços,45,39,43,95,2026-02-02,OK

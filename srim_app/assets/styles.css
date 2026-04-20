@@ -1,0 +1,229 @@
+:root {
+    --srim-bg: #E5E5E5;
+    --srim-white: #FFFFFF;
+    --srim-black: #000000;
+    --srim-navy: #0A1F3B;
+    --srim-gold: #C5A46D;
+    --srim-border: #000000;
+    --srim-grid: #BFBFBF;
+    --srim-tag-bg: #F0F2F6;
+    --srim-tag-text: #2F2F2F;
+}
+
+html, body, [class*="css"] {
+    font-family: "Courier New", "Roboto Mono", monospace !important;
+}
+
+.stApp {
+    background-color: var(--srim-bg) !important;
+    color: var(--srim-black) !important;
+}
+
+[data-testid="stAppViewContainer"] {
+    background-color: var(--srim-bg) !important;
+}
+
+.block-container {
+    padding-top: 1.2rem;
+    padding-bottom: 2.5rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--srim-navy) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+}
+
+p, label, span, small, li, div {
+    color: var(--srim-black) !important;
+}
+
+[data-testid="stSidebar"] {
+    background-color: var(--srim-bg) !important;
+    border-right: 1px solid var(--srim-border);
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4 {
+    font-size: 0.92rem !important;
+}
+
+.sidebar-filter-label {
+    margin: 0.85rem 0 0.25rem 0;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--srim-navy) !important;
+    text-transform: uppercase;
+}
+
+.sidebar-spacer {
+    height: 1rem;
+}
+
+/* KPI cards and callout cards */
+.kpi-card {
+    background: var(--srim-white);
+    border: 1px solid #E0E0E0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 12px 14px;
+    min-height: 98px;
+    margin-bottom: 14px;
+}
+
+.kpi-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.88rem;
+    color: var(--srim-black) !important;
+}
+
+.kpi-icon {
+    color: var(--srim-gold) !important;
+    font-weight: 700;
+}
+
+.kpi-value {
+    margin-top: 8px;
+    color: var(--srim-navy) !important;
+    font-size: 1.32rem;
+    font-weight: 700;
+}
+
+.srim-card {
+    background: var(--srim-white);
+    border: 1px solid var(--srim-border);
+    border-left: 3px solid var(--srim-gold);
+    border-radius: 0;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.srim-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--srim-border);
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.badge-baixo { background: #F3F5F8; color: #0A1F3B !important; }
+.badge-medio { background: #F7F2E8; color: #0A1F3B !important; }
+.badge-alto { background: #F0E6D6; color: #0A1F3B !important; }
+.impacto-alto { color: var(--srim-black) !important; font-weight: 700; }
+
+/* Inputs: uploader, select, text input and dropdown options */
+[data-testid="stFileUploaderDropzone"] {
+    background: var(--srim-white) !important;
+    border: 1px solid var(--srim-border) !important;
+    border-radius: 0 !important;
+}
+
+[data-testid="stFileUploaderDropzone"] * {
+    color: var(--srim-black) !important;
+}
+
+[data-baseweb="select"] > div,
+[data-baseweb="input"] > div,
+[data-testid="stTextInput"] input,
+[data-testid="stDateInput"] input {
+    background: var(--srim-white) !important;
+    color: var(--srim-black) !important;
+    border: 1px solid var(--srim-border) !important;
+    border-radius: 0 !important;
+}
+
+[data-baseweb="popover"] *,
+[role="listbox"] *,
+ul[role="listbox"] li,
+[data-baseweb="menu"] *,
+[data-baseweb="select"] [role="option"] {
+    background: var(--srim-white) !important;
+    color: var(--srim-black) !important;
+}
+
+[data-baseweb="tag"] {
+    background: var(--srim-tag-bg) !important;
+    color: var(--srim-tag-text) !important;
+    border: 1px solid #D8DDE6 !important;
+    border-radius: 0 !important;
+}
+
+/* Action buttons: gold legacy with black text */
+[data-testid="stButton"] button,
+[data-testid="stDownloadButton"] button,
+[data-testid="stFileUploaderDropzone"] button,
+button[kind="secondary"] {
+    background: var(--srim-gold) !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    border-radius: 0 !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stButton"] button:hover,
+[data-testid="stDownloadButton"] button:hover,
+[data-testid="stFileUploaderDropzone"] button:hover,
+button[kind="secondary"]:hover {
+    background: #b9975b !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stButton"] button:focus,
+[data-testid="stDownloadButton"] button:focus,
+[data-testid="stFileUploaderDropzone"] button:focus,
+button[kind="secondary"]:focus {
+    outline: 1px solid #000000 !important;
+    outline-offset: 0 !important;
+}
+
+/* Sidebar collapse/expand control in flat legacy style */
+[data-testid="collapsedControl"] {
+    background: var(--srim-bg) !important;
+    border: 1px solid #000000 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="collapsedControl"] svg {
+    display: none !important;
+}
+
+[data-testid="collapsedControl"]::after {
+    content: ">>";
+    color: #000000 !important;
+    font-family: "Courier New", "Roboto Mono", monospace !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+/* DataFrame as terminal grid */
+[data-testid="stDataFrame"] {
+    width: 100% !important;
+}
+
+[data-testid="stDataFrame"] thead tr th {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: 1px solid var(--srim-border) !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stDataFrame"] tbody tr td {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: 1px solid var(--srim-grid) !important;
+}
+
+section.main > div {
+    gap: 1.2rem;
+}
