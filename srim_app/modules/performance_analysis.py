@@ -9,7 +9,7 @@ def _format_brl(value: float) -> str:
     return f"R$ {formatted}"
 
 
-def calculate_financial_impact(row: pd.Series) -> float:
+def calculate_financial_impact(row: pd.Series, impact_multiplier: float = 1.0) -> float:
     """
     Estimate financial loss when supplier is high-risk and underperforming.
     Rule:
@@ -17,15 +17,16 @@ def calculate_financial_impact(row: pd.Series) -> float:
     - otif < 85
     """
     if row["risk_score"] > 70 and row["otif"] < 85:
-        return float((100 - row["otif"]) * 50000)
+        return float((100 - row["otif"]) * 50000 * impact_multiplier)
     return 0.0
 
 
-def enrich_with_financial_impact(df: pd.DataFrame) -> pd.DataFrame:
+def enrich_with_financial_impact(df: pd.DataFrame, impact_multiplier: float = 1.0) -> pd.DataFrame:
     """Apply financial impact logic and strategic priority segmentation."""
     enriched_df = df.copy()
     enriched_df["impacto_financeiro_estimado"] = enriched_df.apply(
-        calculate_financial_impact, axis=1
+        lambda row: calculate_financial_impact(row, impact_multiplier=impact_multiplier),
+        axis=1,
     )
     enriched_df["prioridade_acao"] = enriched_df["impacto_financeiro_estimado"].apply(
         classify_action_priority
@@ -176,3 +177,32 @@ def generate_ai_strategic_analysis(df: pd.DataFrame) -> list[str]:
         )
 
     return [bottleneck, optimization, board]
+
+
+def generate_protocol_briefing(df: pd.DataFrame) -> str:
+    """
+    Build AI output in tactical protocol format for crisis committee actions.
+    Format:
+    [ANOMALIA DETECTADA] -> [CAUSA PROVÁVEL] -> [IMPACTO FINANCEIRO ESTIMADO] -> [PROTOCOLO DE MITIGAÇÃO]
+    """
+    if df.empty:
+        return (
+            "[ANOMALIA DETECTADA] Baixa disponibilidade de dados -> "
+            "[CAUSA PROVÁVEL] Base filtrada sem fornecedores válidos -> "
+            "[IMPACTO FINANCEIRO ESTIMADO] R$ 0,00 -> "
+            "[PROTOCOLO DE MITIGAÇÃO] Restabelecer ingestão de dados e reexecutar monitoramento."
+        )
+
+    row = df.sort_values("impacto_financeiro_estimado", ascending=False).iloc[0]
+    anomaly = f"{row['supplier_name']} com risco {row['risk_score']:.1f} e OTIF {row['otif']:.1f}"
+    probable_cause = "Desalinhamento entre exposição de risco e estabilidade de entrega"
+    impact = _format_brl(float(row["impacto_financeiro_estimado"]))
+    mitigation = (
+        "Acionar mesa de contingência, renegociar SLA em 72h e abrir trilha de compliance operacional"
+    )
+    return (
+        f"[ANOMALIA DETECTADA] {anomaly} -> "
+        f"[CAUSA PROVÁVEL] {probable_cause} -> "
+        f"[IMPACTO FINANCEIRO ESTIMADO] {impact} -> "
+        f"[PROTOCOLO DE MITIGAÇÃO] {mitigation}."
+    )

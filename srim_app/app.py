@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -13,6 +14,7 @@ from modules.performance_analysis import (
     enrich_with_financial_impact,
     generate_ai_strategic_analysis,
     generate_executive_insights,
+    generate_protocol_briefing,
     get_performance_table,
     simulate_scenarios,
 )
@@ -67,10 +69,89 @@ def render_kpi_card(title: str, value: str, icon: str) -> None:
     )
 
 
-def prepare_analysis_dataframe(base_df: pd.DataFrame) -> pd.DataFrame:
+def prepare_analysis_dataframe(base_df: pd.DataFrame, impact_multiplier: float = 1.0) -> pd.DataFrame:
     prepared = calculate_risk_score(base_df)
-    prepared = enrich_with_financial_impact(prepared)
+    prepared = enrich_with_financial_impact(prepared, impact_multiplier=impact_multiplier)
     return prepared
+
+
+def apply_monte_carlo_noise(df: pd.DataFrame, volatility_scale: float = 1.0) -> pd.DataFrame:
+    """
+    Apply simplified Monte Carlo perturbation to risk drivers and OTIF.
+    Keeps values bounded in [0, 100] for stable executive simulation.
+    """
+    simulated = df.copy()
+    size = len(simulated)
+    if size == 0:
+        return simulated
+
+    risk_noise = np.random.normal(0, 2.4 * volatility_scale, size=size)
+    labor_noise = np.random.normal(0, 2.0 * volatility_scale, size=size)
+    financial_noise = np.random.normal(0, 2.8 * volatility_scale, size=size)
+    otif_noise = np.random.normal(0, 1.8 * volatility_scale, size=size)
+
+    simulated["risk_environmental"] = (simulated["risk_environmental"] + risk_noise).clip(0, 100)
+    simulated["risk_labor"] = (simulated["risk_labor"] + labor_noise).clip(0, 100)
+    simulated["risk_financial"] = (simulated["risk_financial"] + financial_noise).clip(0, 100)
+    simulated["otif"] = (simulated["otif"] + otif_noise).clip(0, 100)
+    return simulated
+
+
+def apply_crisis_scenario(df: pd.DataFrame, scenario_key: str) -> tuple[pd.DataFrame, float]:
+    """
+    Stress test scenarios for global disruptions.
+    Returns transformed dataframe and financial impact multiplier.
+    """
+    stressed = df.copy()
+    impact_multiplier = 1.0
+
+    if scenario_key == "suez":
+        stressed["risk_environmental"] = (stressed["risk_environmental"] * 1.18).clip(0, 100)
+        stressed["risk_labor"] = (stressed["risk_labor"] * 1.12).clip(0, 100)
+        stressed["risk_financial"] = (stressed["risk_financial"] * 1.10).clip(0, 100)
+        stressed["otif"] = (stressed["otif"] - 8).clip(0, 100)
+        impact_multiplier = 1.35
+    elif scenario_key == "fx":
+        stressed["risk_financial"] = (stressed["risk_financial"] * 1.35).clip(0, 100)
+        stressed["risk_labor"] = (stressed["risk_labor"] * 1.05).clip(0, 100)
+        stressed["otif"] = (stressed["otif"] - 4).clip(0, 100)
+        impact_multiplier = 1.25
+    elif scenario_key == "pandemic":
+        stressed["risk_environmental"] = (stressed["risk_environmental"] * 1.20).clip(0, 100)
+        stressed["risk_labor"] = (stressed["risk_labor"] * 1.30).clip(0, 100)
+        stressed["risk_financial"] = (stressed["risk_financial"] * 1.20).clip(0, 100)
+        stressed["otif"] = (stressed["otif"] - 12).clip(0, 100)
+        impact_multiplier = 1.60
+
+    return stressed, impact_multiplier
+
+
+def get_heartbeat_text() -> str:
+    if "srim_start_ts" not in st.session_state:
+        st.session_state["srim_start_ts"] = pd.Timestamp.now()
+    uptime_seconds = int((pd.Timestamp.now() - st.session_state["srim_start_ts"]).total_seconds())
+    hours = uptime_seconds // 3600
+    minutes = (uptime_seconds % 3600) // 60
+    seconds = uptime_seconds % 60
+    latency = np.random.randint(18, 25)
+    return (
+        "<div class='system-heartbeat'>"
+        "<span class='pulse-dot'></span>"
+        "<span>[SYSTEM LIVE // MONITORING GLOBAL ROUTES]</span>"
+        f"<span class='heartbeat-meta'>LATENCY {latency}ms | UPTIME {hours:02d}:{minutes:02d}:{seconds:02d}</span>"
+        "</div>"
+    )
+
+
+def get_live_ticker() -> str:
+    ticker_items = [
+        "Shortage de semicondutores detectado em Taiwan",
+        "Greve portuária em Santos com impacto em lead time",
+        "Volatilidade cambial acima do corredor de segurança",
+        "Rota do Mar Vermelho com aumento de prêmio logístico",
+        "Pressão regulatória ESG em fornecedores de mineração",
+    ]
+    return "  |  ".join(ticker_items)
 
 
 def apply_sidebar_filters(df: pd.DataFrame, selected_sectors: list[str], selected_risk_classes: list[str]) -> pd.DataFrame:
@@ -82,17 +163,59 @@ def apply_sidebar_filters(df: pd.DataFrame, selected_sectors: list[str], selecte
     return filtered
 
 
+def build_kraljic_matrix(df: pd.DataFrame) -> pd.DataFrame:
+    matrix = df.copy()
+    matrix["impact_bucket"] = np.where(
+        matrix["impacto_financeiro_estimado"] >= matrix["impacto_financeiro_estimado"].median(),
+        "Alto Impacto no Lucro",
+        "Baixo Impacto no Lucro",
+    )
+    matrix["risk_bucket"] = np.where(
+        matrix["risk_score"] >= 60,
+        "Alto Risco de Suprimento",
+        "Baixo Risco de Suprimento",
+    )
+    matrix["kraljic_quadrante"] = (
+        matrix["impact_bucket"].str.replace(" Impacto no Lucro", "", regex=False)
+        + " / "
+        + matrix["risk_bucket"].str.replace(" Risco de Suprimento", "", regex=False)
+    )
+    return matrix
+
+
+def build_transit_table(df: pd.DataFrame) -> pd.DataFrame:
+    transit_df = df.sort_values("impacto_financeiro_estimado", ascending=False).head(8).copy()
+    transit_df["rota"] = [
+        "Shanghai -> Santos",
+        "Hamburgo -> Itajai",
+        "Qingdao -> Paranagua",
+        "Rotterdam -> Santos",
+        "Busan -> Rio Grande",
+        "Xiamen -> Itapoa",
+        "Valencia -> Suape",
+        "Antwerp -> Santos",
+    ][: len(transit_df)]
+    transit_df["progresso_pct"] = (100 - (transit_df["otif"].clip(0, 100) * 0.65)).clip(8, 98).round(0).astype(int)
+    transit_df["eta_horas"] = (transit_df["risk_score"] * 0.9).clip(8, 96).round(0).astype(int)
+    return transit_df[["supplier_name", "rota", "progresso_pct", "eta_horas", "prioridade_acao"]]
+
+
 def render_dashboard(df: pd.DataFrame) -> None:
     st.title("SRIM | Supply Risk & Integrity Monitor")
-    st.markdown("Plataforma executiva para monitoramento de Governança, Compliance e Performance de fornecedores.")
+    st.markdown("Global Command Center para monitoramento de Governança, Compliance e Performance operacional.")
+
+    st.markdown(get_heartbeat_text(), unsafe_allow_html=True)
+    st.markdown(f"<div class='live-ticker'><span>{get_live_ticker()}</span></div>", unsafe_allow_html=True)
 
     risk_mean = float(df["risk_score"].mean())
     total_financial_risk = float(df["impacto_financeiro_estimado"].sum())
     scenarios = simulate_scenarios(df)
     upside = scenarios["impacto_base"] - scenarios["impacto_melhoria"]
     downside = scenarios["impacto_critico"] - scenarios["impacto_base"]
+    live_suppliers = int(len(df))
+    critical_suppliers = int((df["prioridade_acao"] == "CRÍTICO").sum())
 
-    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+    kpi_col1, kpi_col2, kpi_col3, kpi_col4, kpi_col5 = st.columns(5)
     with kpi_col1:
         render_kpi_card(
             "Risk Score Médio",
@@ -105,11 +228,13 @@ def render_dashboard(df: pd.DataFrame) -> None:
         render_kpi_card("Exposição Atual", format_brl(scenarios["impacto_base"]), "◉")
     with kpi_col4:
         render_kpi_card("Upside Potencial", format_brl(upside), "↘")
+    with kpi_col5:
+        render_kpi_card("Fornecedores Críticos", f"{critical_suppliers}/{live_suppliers}", "!")
 
     sub_col1, sub_col2 = st.columns(2)
     with sub_col1:
         render_kpi_card("Downside Risk", format_brl(downside), "↗")
-    main_risk_class = df["risk_class"].value_counts().idxmax()
+    main_risk_class = df["risk_class"].value_counts().idxmax() if not df.empty else "Médio"
     sub_col2.markdown(
         f"<div class='srim-card'><strong>Classe de risco predominante</strong><br>{render_risk_badge(main_risk_class)}</div>",
         unsafe_allow_html=True,
@@ -125,7 +250,36 @@ def render_dashboard(df: pd.DataFrame) -> None:
     c2.metric("Melhoria", format_brl(scenarios["impacto_melhoria"]))
     c3.metric("Crítico", format_brl(scenarios["impacto_critico"]))
 
-    waterfall = go.Figure(
+    intelligence_col1, intelligence_col2 = st.columns(2)
+
+    with intelligence_col1:
+        st.markdown("### Coração da Inteligência | Matriz de Kraljic")
+        kraljic_df = build_kraljic_matrix(df)
+        kraljic_fig = px.scatter(
+            kraljic_df,
+            x="impacto_financeiro_estimado",
+            y="risk_score",
+            color="kraljic_quadrante",
+            size="impacto_financeiro_estimado",
+            hover_data=["supplier_name", "sector", "prioridade_acao"],
+            color_discrete_map={
+                "Alto / Alto": "#D32F2F",
+                "Alto / Baixo": "#2E5F6F",
+                "Baixo / Alto": "#6D6D6D",
+                "Baixo / Baixo": "#8F9AA3",
+            },
+            template="plotly_white",
+        )
+        kraljic_fig.update_layout(
+            height=380,
+            xaxis_title="Impacto Financeiro Estimado",
+            yaxis_title="Risco de Suprimento",
+        )
+        st.plotly_chart(kraljic_fig, use_container_width=True)
+
+    with intelligence_col2:
+        st.markdown("### Coração da Inteligência | Waterfall Financeiro")
+        waterfall = go.Figure(
         go.Waterfall(
             name="Cenários Financeiros",
             orientation="v",
@@ -138,8 +292,17 @@ def render_dashboard(df: pd.DataFrame) -> None:
             totals={"marker": {"color": "#2F2F2F"}},
         )
     )
-    waterfall.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=20, b=20))
-    st.plotly_chart(waterfall, use_container_width=True)
+        waterfall.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=20, b=20))
+        st.plotly_chart(waterfall, use_container_width=True)
+
+    st.markdown("### IA de Alta Fidelidade | Protocolo de Ação")
+    st.markdown(f"<div class='srim-card protocol-card'>{generate_protocol_briefing(df)}</div>", unsafe_allow_html=True)
+    if st.button("EXECUTAR PROTOCOLO"):
+        st.markdown(
+            "<div class='srim-card'>[LOG] Comitê de crise acionado -> "
+            "Alertas enviados para Procurement, Compliance e Torre de Controle Logística.</div>",
+            unsafe_allow_html=True,
+        )
 
     st.markdown("### Top 5 Fornecedores Mais Arriscados")
     top_risky = get_top_risky_suppliers(df, 5).copy()
@@ -196,6 +359,10 @@ def render_dashboard(df: pd.DataFrame) -> None:
         use_container_width=True,
         hide_index=True,
     )
+
+    st.markdown("### Logística Preditiva | Cargas em Trânsito")
+    transit = build_transit_table(df)
+    st.dataframe(transit, use_container_width=True, hide_index=True)
 
     st.markdown("### Insights Executivos")
     for insight in generate_executive_insights(df):
@@ -301,6 +468,28 @@ def render_performance_module(df: pd.DataFrame) -> None:
 def main() -> None:
     load_css()
     st.sidebar.title("Navegação")
+    st.sidebar.markdown("### Stress Test Simulator")
+    if "active_crisis_scenario" not in st.session_state:
+        st.session_state["active_crisis_scenario"] = "base"
+
+    crisis_col1, crisis_col2 = st.sidebar.columns(2)
+    if crisis_col1.button("Bloqueio no Suez"):
+        st.session_state["active_crisis_scenario"] = "suez"
+    if crisis_col2.button("Crise Cambial"):
+        st.session_state["active_crisis_scenario"] = "fx"
+    if st.sidebar.button("Nova Pandemia"):
+        st.session_state["active_crisis_scenario"] = "pandemic"
+    if st.sidebar.button("Resetar Cenário"):
+        st.session_state["active_crisis_scenario"] = "base"
+
+    scenario_labels = {
+        "base": "BASE",
+        "suez": "BLOQUEIO NO SUEZ",
+        "fx": "CRISE CAMBIAL",
+        "pandemic": "NOVA PANDEMIA",
+    }
+    st.sidebar.caption(f"Cenário ativo: {scenario_labels[st.session_state['active_crisis_scenario']]}")
+
     uploaded_csv = st.sidebar.file_uploader("Upload de base de fornecedores (CSV)", type=["csv"])
 
     data_source = "mock"
@@ -310,7 +499,7 @@ def main() -> None:
             is_valid, missing_columns = validate_uploaded_columns(uploaded_df)
             if is_valid:
                 data_source = "upload"
-                df = prepare_analysis_dataframe(uploaded_df)
+                base_df = uploaded_df.copy()
                 st.sidebar.success("CSV carregado com sucesso.")
             else:
                 st.sidebar.warning(
@@ -318,12 +507,19 @@ def main() -> None:
                     + ", ".join(missing_columns)
                     + ". Usando base mockada."
                 )
-                df = get_base_dataframe()
+                base_df = load_suppliers_data(DATA_FILE)
         except Exception:
             st.sidebar.warning("Não foi possível ler o CSV enviado. Usando base mockada.")
-            df = get_base_dataframe()
+            base_df = load_suppliers_data(DATA_FILE)
     else:
-        df = get_base_dataframe()
+        base_df = load_suppliers_data(DATA_FILE)
+
+    # Real-time simulation layer: Monte Carlo + stress test scenario.
+    scenario_df, impact_multiplier = apply_crisis_scenario(
+        apply_monte_carlo_noise(base_df, volatility_scale=1.0),
+        st.session_state["active_crisis_scenario"],
+    )
+    df = prepare_analysis_dataframe(scenario_df, impact_multiplier=impact_multiplier)
 
     st.sidebar.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
     st.sidebar.markdown("<p class='sidebar-filter-label'>Setor</p>", unsafe_allow_html=True)
